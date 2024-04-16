@@ -1,40 +1,70 @@
 "use client";
 
-import { Box, Button, Grid, Paper, TextField } from "@mui/material";
-import { hostname } from "os";
-import { useState } from "react";
+import {
+  Box,
+  Button,
+  Chip,
+  Grid,
+  LinearProgress,
+  Paper,
+  TextField,
+} from "@mui/material";
+import { Fragment, useEffect, useState } from "react";
 
 const BASE_API_URL = "https://orkes-demo-be.vercel.app";
 
-export default function Home() {
-  const [token, setToken] = useState("");
-  const [name, setName] = useState("");
-  // const [version, setVersion] = useState("");
-  const [host, setHost] = useState("https://orkesdev.orkesconductor.com/");
-  const [isError, setIsError] = useState(false);
-  const [data, setData] = useState<any>(null);
-  console.debug("🚀 ~ Home ~ data:", data);
+let timeoutId: NodeJS.Timeout;
 
-  const fetchWorkflow = async () => {
-    const result = await fetch(
-      `${BASE_API_URL}/workflow/${name}?host=${host}`,
-      {
-        headers: {
-          "x-authorization": token,
-        },
-        method: "GET",
-      }
-    );
+export default function Home() {
+  const [name, setName] = useState("multiparty_chat");
+  const [version, setVersion] = useState("1");
+  const [url, setUrl] = useState("https://edition.cnn.com/");
+  const [completedWorkflow, setCompletedWorkflow] = useState<any>(null);
+
+  const runWorkflow = async () => {
+    const result = await fetch(`${BASE_API_URL}/run-workflow`, {
+      headers: {
+        "Content-Type": "application/json; charset=utf-8",
+      },
+      method: "POST",
+      body: JSON.stringify({
+        workflowName: name,
+        workflowVersion: version,
+        url,
+      }),
+    });
 
     const data = await result.json();
 
     if (data) {
-      setData(data);
+      setCompletedWorkflow(data);
     }
   };
 
+  const fetchWorkflowExecution = async (workflowId: string) => {
+    const result = (await fetch(`${BASE_API_URL}/workflow-exe/${workflowId}`, {
+      method: "GET",
+    })) as any;
+
+    const data = await result.json();
+
+    setCompletedWorkflow(data);
+  };
+
+  useEffect(() => {
+    if (completedWorkflow?.status === "RUNNING") {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+
+      timeoutId = setTimeout(() => {
+        fetchWorkflowExecution(completedWorkflow?.workflowId);
+      }, 2000);
+    }
+  }, [completedWorkflow]);
+
   const histories: { role: string; message: string }[] =
-    data?.variables?.history || [];
+    completedWorkflow?.variables?.history || [];
 
   return (
     <Box
@@ -57,49 +87,40 @@ export default function Home() {
         }}
       >
         <Grid container spacing={3}>
-          <Grid item>Orkes demo</Grid>
-          <Grid item xs={12}>
+          <Grid
+            item
+            xs={12}
+            sx={{ textAlign: "center", fontSize: 40, fontWeight: 800 }}
+          >
+            Orkes demo
+          </Grid>
+          <Grid item xs={10}>
             <TextField
               fullWidth
               variant="outlined"
-              label="Workflow execution id"
-              placeholder="Workflow execution id"
-              value={name}
-              onChange={(event) => setName(event.target.value)}
+              label="URL"
+              placeholder="URL"
+              value={url}
+              onChange={(event) => setUrl(event.target.value)}
             />
           </Grid>
-          <Grid item xs={12}>
-            <TextField
-              fullWidth
-              variant="outlined"
-              label="Host"
-              placeholder="Host"
-              value={host}
-              onChange={(event) => setHost(event.target.value)}
-            />
-          </Grid>
-          <Grid item xs={12}>
-            <TextField
-              fullWidth
-              variant="outlined"
-              label="Token"
-              placeholder="Token"
-              value={token}
-              onChange={(event) => setToken(event.target.value)}
-            />
-          </Grid>
-          <Grid item xs={12}>
+          <Grid item xs={2}>
             <Button
               variant="contained"
               onClick={() => {
-                fetchWorkflow();
+                runWorkflow();
               }}
+              sx={{ height: "100%", px: 5 }}
             >
               OK
             </Button>
           </Grid>
         </Grid>
       </Paper>
+
+      {completedWorkflow?.status === "RUNNING" && (
+        <LinearProgress sx={{ width: "100%", mb: -4 }} />
+      )}
       <Paper
         sx={{
           p: 4,
@@ -112,6 +133,15 @@ export default function Home() {
       >
         <Box mb={3} sx={{ fontSize: 30, fontWeight: 600 }}>
           History
+          {completedWorkflow?.status && (
+            <Chip
+              color={
+                completedWorkflow?.status === "COMPLETED" ? "success" : "error"
+              }
+              label={completedWorkflow?.status}
+              sx={{ ml: 1 }}
+            />
+          )}
         </Box>
         <Grid
           container
@@ -121,16 +151,16 @@ export default function Home() {
             // boxShadow: "2px 2px 2px 2px rgba(10,10,10,0.2)",
           }}
         >
-          {histories.map((item) => {
+          {histories.map((item, index) => {
             return (
-              <>
+              <Fragment key={`history-${index}`}>
                 <Grid item xs={2}>
                   {item.role}
                 </Grid>
                 <Grid item xs={10}>
                   {item.message}
                 </Grid>
-              </>
+              </Fragment>
             );
           })}
         </Grid>
