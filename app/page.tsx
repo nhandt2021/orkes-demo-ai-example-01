@@ -12,13 +12,22 @@ import {
 import { Fragment, useEffect, useState } from "react";
 
 const BASE_API_URL = "https://orkes-demo-be.vercel.app";
+// const BASE_API_URL = "http://localhost:3001";
 
 let timeoutId: NodeJS.Timeout;
+
+const Progress = ({ status }: { status?: string }) => {
+  return status === "RUNNING" ? (
+    <LinearProgress sx={{ width: "100%", mb: -4 }} />
+  ) : null;
+};
 
 export default function Home() {
   const [name, setName] = useState("multiparty_chat");
   const [version, setVersion] = useState("1");
   const [url, setUrl] = useState("https://edition.cnn.com/");
+  const [user1, setUser1] = useState("");
+  const [user2, setUser2] = useState("");
   const [completedWorkflow, setCompletedWorkflow] = useState<any>(null);
 
   const runWorkflow = async () => {
@@ -31,6 +40,8 @@ export default function Home() {
         workflowName: name,
         workflowVersion: version,
         url,
+        ua1: user1,
+        ua2: user2,
       }),
     });
 
@@ -94,7 +105,7 @@ export default function Home() {
           >
             Orkes demo
           </Grid>
-          <Grid item xs={10}>
+          <Grid item xs={12} md={3}>
             <TextField
               fullWidth
               variant="outlined"
@@ -102,6 +113,26 @@ export default function Home() {
               placeholder="URL"
               value={url}
               onChange={(event) => setUrl(event.target.value)}
+            />
+          </Grid>
+          <Grid item xs={12} md={3}>
+            <TextField
+              fullWidth
+              variant="outlined"
+              label="First participant"
+              placeholder="First participant"
+              value={user1}
+              onChange={(event) => setUser1(event.target.value)}
+            />
+          </Grid>
+          <Grid item xs={12} md={3}>
+            <TextField
+              fullWidth
+              variant="outlined"
+              label="Second participant"
+              placeholder="Second participant"
+              value={user2}
+              onChange={(event) => setUser2(event.target.value)}
             />
           </Grid>
           <Grid item xs={2}>
@@ -118,9 +149,7 @@ export default function Home() {
         </Grid>
       </Paper>
 
-      {completedWorkflow?.status === "RUNNING" && (
-        <LinearProgress sx={{ width: "100%", mb: -4 }} />
-      )}
+      <Progress status={completedWorkflow?.status as string} />
       <Paper
         sx={{
           p: 4,
@@ -132,7 +161,7 @@ export default function Home() {
         }}
       >
         <Box mb={3} sx={{ fontSize: 30, fontWeight: 600 }}>
-          History
+          Conversation
           {completedWorkflow?.status && (
             <Chip
               color={
@@ -152,10 +181,10 @@ export default function Home() {
           }}
         >
           {histories.map((item, index) => {
-            return (
+            return index === 0 ? null : (
               <Fragment key={`history-${index}`}>
                 <Grid item xs={2}>
-                  {item.role}
+                  {item.role === "assistant" ? "Moderator" : item.role}
                 </Grid>
                 <Grid item xs={10}>
                   {item.message}
@@ -165,6 +194,7 @@ export default function Home() {
           })}
         </Grid>
       </Paper>
+      <Progress status={completedWorkflow?.status as string} />
     </Box>
   );
 }
