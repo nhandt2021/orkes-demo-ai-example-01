@@ -9,6 +9,7 @@ import {
   LinearProgressProps,
   Paper,
   TextField,
+  Link,
 } from "@mui/material";
 import { Fragment, useEffect, useState } from "react";
 
@@ -27,6 +28,19 @@ const Progress = ({
       sx={{ width: "100%", mb: -4, ...restProps.sx }}
     />
   ) : null;
+};
+
+const getChipColor = (status: string) => {
+  switch (status) {
+    case "RUNNING":
+      return "info";
+
+    case "COMPLETED":
+      return "success";
+
+    default:
+      return "error";
+  }
 };
 
 export default function Home() {
@@ -160,6 +174,17 @@ export default function Home() {
               OK
             </Button>
           </Grid>
+          {completedWorkflow?.workflowId && (
+            <Grid item xs={12}>
+              Workflow execution:
+              <Link
+                href={`https://orkesdev.orkesconductor.com/execution/${completedWorkflow?.workflowId}`}
+                rel="noreferrer"
+                target="_blank"
+                ml={1}
+              >{`https://orkesdev.orkesconductor.com/execution/${completedWorkflow?.workflowId}`}</Link>
+            </Grid>
+          )}
         </Grid>
       </Paper>
 
@@ -178,9 +203,7 @@ export default function Home() {
           Conversation
           {completedWorkflow?.status && (
             <Chip
-              color={
-                completedWorkflow?.status === "COMPLETED" ? "success" : "error"
-              }
+              color={getChipColor(completedWorkflow?.status)}
               label={completedWorkflow?.status}
               sx={{ ml: 1 }}
             />
