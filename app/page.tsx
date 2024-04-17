@@ -6,6 +6,7 @@ import {
   Chip,
   Grid,
   LinearProgress,
+  LinearProgressProps,
   Paper,
   TextField,
 } from "@mui/material";
@@ -16,9 +17,15 @@ const BASE_API_URL = "https://orkes-demo-be.vercel.app";
 
 let timeoutId: NodeJS.Timeout;
 
-const Progress = ({ status }: { status?: string }) => {
+const Progress = ({
+  status,
+  ...restProps
+}: LinearProgressProps & { status?: string }) => {
   return status === "RUNNING" ? (
-    <LinearProgress sx={{ width: "100%", mb: -4 }} />
+    <LinearProgress
+      {...restProps}
+      sx={{ width: "100%", mb: -4, ...restProps.sx }}
+    />
   ) : null;
 };
 
@@ -108,30 +115,36 @@ export default function Home() {
           <Grid item xs={12} md={3}>
             <TextField
               fullWidth
+              required
               variant="outlined"
               label="URL"
               placeholder="URL"
               value={url}
+              error={!url}
               onChange={(event) => setUrl(event.target.value)}
             />
           </Grid>
           <Grid item xs={12} md={3}>
             <TextField
               fullWidth
+              required
               variant="outlined"
               label="First participant"
               placeholder="First participant"
               value={user1}
+              error={!user1}
               onChange={(event) => setUser1(event.target.value)}
             />
           </Grid>
           <Grid item xs={12} md={3}>
             <TextField
               fullWidth
+              required
               variant="outlined"
               label="Second participant"
               placeholder="Second participant"
               value={user2}
+              error={!user2}
               onChange={(event) => setUser2(event.target.value)}
             />
           </Grid>
@@ -142,6 +155,7 @@ export default function Home() {
                 runWorkflow();
               }}
               sx={{ height: "100%", px: 5 }}
+              disabled={!url || !user1 || !user2}
             >
               OK
             </Button>
@@ -194,7 +208,7 @@ export default function Home() {
           })}
         </Grid>
       </Paper>
-      <Progress status={completedWorkflow?.status as string} />
+      <Progress status={completedWorkflow?.status as string} sx={{ mt: -4 }} />
     </Box>
   );
 }
