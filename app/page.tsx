@@ -146,7 +146,7 @@ export default function Home() {
             xs={12}
             sx={{ textAlign: "center", fontSize: 40, fontWeight: 800 }}
           >
-            MultiAgent Chat Demo
+            Multi Agent Chat Demo
           </Grid>
           <Grid item xs={12} md={3}>
             <TextField
