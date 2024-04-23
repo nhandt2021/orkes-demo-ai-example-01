@@ -15,6 +15,9 @@ import { Fragment, useEffect, useState } from "react";
 
 const BASE_API_URL = "https://orkes-demo-be.vercel.app";
 // const BASE_API_URL = "http://localhost:3001";
+const CONDUCTOR_URL = "https://play.orkes.io";
+const WORKFLOW_NAME = "multiparty_chat";
+const WORKFLOW_VERSION = "1";
 
 let timeoutId: NodeJS.Timeout;
 
@@ -44,8 +47,6 @@ const getChipColor = (status: string) => {
 };
 
 export default function Home() {
-  const [name, setName] = useState("multiparty_chat");
-  const [version, setVersion] = useState("1");
   const [url, setUrl] = useState("https://edition.cnn.com/");
   const [user1, setUser1] = useState("");
   const [user2, setUser2] = useState("");
@@ -58,8 +59,8 @@ export default function Home() {
       },
       method: "POST",
       body: JSON.stringify({
-        workflowName: name,
-        workflowVersion: version,
+        workflowName: WORKFLOW_NAME,
+        workflowVersion: WORKFLOW_VERSION,
         url,
         ua1: user1,
         ua2: user2,
@@ -124,7 +125,7 @@ export default function Home() {
             xs={12}
             sx={{ textAlign: "center", fontSize: 40, fontWeight: 800 }}
           >
-            Orkes demo
+            MultiAgent Chat Demo
           </Grid>
           <Grid item xs={12} md={3}>
             <TextField
@@ -178,11 +179,11 @@ export default function Home() {
             <Grid item xs={12}>
               Workflow execution:
               <Link
-                href={`https://orkesdev.orkesconductor.com/execution/${completedWorkflow?.workflowId}`}
+                href={`${CONDUCTOR_URL}/execution/${completedWorkflow?.workflowId}`}
                 rel="noreferrer"
                 target="_blank"
                 ml={1}
-              >{`https://orkesdev.orkesconductor.com/execution/${completedWorkflow?.workflowId}`}</Link>
+              >{`${CONDUCTOR_URL}/execution/${completedWorkflow?.workflowId}`}</Link>
             </Grid>
           )}
         </Grid>
@@ -214,7 +215,6 @@ export default function Home() {
           spacing={2}
           sx={{
             background: "#ffffee",
-            // boxShadow: "2px 2px 2px 2px rgba(10,10,10,0.2)",
           }}
         >
           {histories.map((item, index) => {
