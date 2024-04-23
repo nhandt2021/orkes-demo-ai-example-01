@@ -116,7 +116,6 @@ export default function Home() {
       fetchWorkflowExecution(workflowId);
     }
   }, [workflowId]);
-  console.debug("🚀 ~ Home ~ completedWorkflow:", completedWorkflow);
 
   const histories: { role: string; message: string }[] =
     completedWorkflow?.variables?.history || [];
