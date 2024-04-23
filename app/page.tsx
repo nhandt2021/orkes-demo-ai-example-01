@@ -11,7 +11,8 @@ import {
   TextField,
   Link,
 } from "@mui/material";
-import { Fragment, useEffect, useState } from "react";
+import { useRouter, usePathname } from "next/navigation";
+import { Fragment, useEffect, useMemo, useState } from "react";
 
 const BASE_API_URL = "https://orkes-demo-be.vercel.app";
 // const BASE_API_URL = "http://localhost:3001";
@@ -47,6 +48,11 @@ const getChipColor = (status: string) => {
 };
 
 export default function Home() {
+  const router = useRouter();
+  const pathNames = usePathname();
+
+  const workflowId = useMemo(() => pathNames.split("/")?.[1], [pathNames]);
+
   const [url, setUrl] = useState("https://edition.cnn.com/");
   const [user1, setUser1] = useState("");
   const [user2, setUser2] = useState("");
@@ -71,6 +77,7 @@ export default function Home() {
 
     if (data) {
       setCompletedWorkflow(data);
+      router.push(`/${data?.workflowId}`);
     }
   };
 
@@ -94,7 +101,22 @@ export default function Home() {
         fetchWorkflowExecution(completedWorkflow?.workflowId);
       }, 2000);
     }
+
+    if (completedWorkflow?.input?.ua1) {
+      setUser1(completedWorkflow?.input?.ua1);
+    }
+
+    if (completedWorkflow?.input?.ua2) {
+      setUser2(completedWorkflow?.input?.ua2);
+    }
   }, [completedWorkflow]);
+
+  useEffect(() => {
+    if (workflowId) {
+      fetchWorkflowExecution(workflowId);
+    }
+  }, [workflowId]);
+  console.debug("🚀 ~ Home ~ completedWorkflow:", completedWorkflow);
 
   const histories: { role: string; message: string }[] =
     completedWorkflow?.variables?.history || [];
