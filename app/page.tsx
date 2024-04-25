@@ -13,6 +13,16 @@ import {
 } from "@mui/material";
 import { useRouter, usePathname } from "next/navigation";
 import { Fragment, useEffect, useMemo, useState } from "react";
+import { CoPilotChat } from "./components/CoPilotChat";
+import { UserChat } from "./components/UserChat";
+import {
+  blue,
+  calculateMissingTimeSlots,
+  getLastItem,
+  green,
+  white,
+} from "./components/utils";
+import TypingEffect from "./components/TypingEffect";
 
 const BASE_API_URL = "https://orkes-demo-be.vercel.app";
 // const BASE_API_URL = "http://localhost:3001";
@@ -57,6 +67,8 @@ export default function Home() {
   const [user1, setUser1] = useState("");
   const [user2, setUser2] = useState("");
   const [completedWorkflow, setCompletedWorkflow] = useState<any>(null);
+  const [startTime, setStartTime] = useState<number>(0);
+  const [updateTime, setUpdateTime] = useState<number>(0);
 
   const runWorkflow = async () => {
     const result = await fetch(`${BASE_API_URL}/run-workflow`, {
@@ -89,6 +101,14 @@ export default function Home() {
     const data = await result.json();
 
     setCompletedWorkflow(data);
+
+    if (data?.startTime) {
+      setStartTime(data?.startTime);
+    }
+
+    if (data?.updateTime) {
+      setUpdateTime(data?.updateTime);
+    }
   };
 
   useEffect(() => {
@@ -117,8 +137,16 @@ export default function Home() {
     }
   }, [workflowId]);
 
-  const histories: { role: string; message: string }[] =
-    completedWorkflow?.variables?.history || [];
+  const histories: { role: string; message: string }[] = useMemo(
+    () => completedWorkflow?.variables?.history || [],
+    [completedWorkflow]
+  );
+
+  const missingTimeSlots = calculateMissingTimeSlots(
+    startTime,
+    updateTime,
+    histories.length
+  );
 
   return (
     <Box
@@ -210,18 +238,15 @@ export default function Home() {
         </Grid>
       </Paper>
 
-      <Progress status={completedWorkflow?.status as string} />
       <Paper
         sx={{
           p: 4,
           display: "flex",
           flexDirection: "column",
-          alignItems: "center",
-          justifyItems: "center",
           width: "100%",
         }}
       >
-        <Box mb={3} sx={{ fontSize: 30, fontWeight: 600 }}>
+        <Box mb={3} sx={{ fontSize: 30, fontWeight: 600, textAlign: "center" }}>
           Conversation
           {completedWorkflow?.status && (
             <Chip
@@ -231,28 +256,48 @@ export default function Home() {
             />
           )}
         </Box>
-        <Grid
-          container
-          spacing={2}
-          sx={{
-            background: "#ffffee",
-          }}
-        >
+        <Grid container spacing={2}>
           {histories.map((item, index) => {
+            const dateTime = new Date(missingTimeSlots[index]);
+            const displayTime = dateTime.toLocaleString();
+
             return index === 0 ? null : (
               <Fragment key={`history-${index}`}>
-                <Grid item xs={2}>
-                  {item.role === "assistant" ? "Moderator" : item.role}
-                </Grid>
-                <Grid item xs={10}>
-                  {item.message}
-                </Grid>
+                {item.role === "assistant" ? (
+                  <Grid item xs={12}>
+                    <CoPilotChat position="left" time={displayTime}>
+                      {item.message}
+                    </CoPilotChat>
+                  </Grid>
+                ) : (
+                  <Grid item xs={12}>
+                    <UserChat
+                      position="right"
+                      backgroundColor={blue}
+                      color={white}
+                      time={displayTime}
+                    >
+                      {item.message}
+                    </UserChat>
+                  </Grid>
+                )}
               </Fragment>
             );
           })}
         </Grid>
+
+        {completedWorkflow?.status === "RUNNING" && (
+          <Grid item xs={12} display="flex">
+            <CoPilotChat
+              position="left"
+              backgroundColor={green}
+              name="Someone is typing"
+            >
+              <TypingEffect />
+            </CoPilotChat>
+          </Grid>
+        )}
       </Paper>
-      <Progress status={completedWorkflow?.status as string} sx={{ mt: -4 }} />
     </Box>
   );
 }
