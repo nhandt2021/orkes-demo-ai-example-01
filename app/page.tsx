@@ -122,6 +122,10 @@ export default function Home() {
       }, 2000);
     }
 
+    if (completedWorkflow?.input?.url) {
+      setUrl(completedWorkflow?.input?.url);
+    }
+
     if (completedWorkflow?.input?.ua1) {
       setUser1(completedWorkflow?.input?.ua1);
     }
@@ -137,7 +141,10 @@ export default function Home() {
     }
   }, [workflowId]);
 
-  const histories: { role: string; message: string }[] = useMemo(
+  const histories: {
+    role: string;
+    message: string | { result: string; user: string };
+  }[] = useMemo(
     () => completedWorkflow?.variables?.history || [],
     [completedWorkflow]
   );
@@ -265,8 +272,18 @@ export default function Home() {
               <Fragment key={`history-${index}`}>
                 {item.role === "assistant" ? (
                   <Grid item xs={12}>
-                    <CoPilotChat position="left" time={displayTime}>
-                      {item.message}
+                    <CoPilotChat
+                      position="left"
+                      time={displayTime}
+                      name={
+                        typeof item.message === "object"
+                          ? item.message?.user
+                          : undefined
+                      }
+                    >
+                      {typeof item.message === "string"
+                        ? item.message
+                        : item.message?.result}
                     </CoPilotChat>
                   </Grid>
                 ) : (
@@ -276,8 +293,15 @@ export default function Home() {
                       backgroundColor={blue}
                       color={white}
                       time={displayTime}
+                      name={
+                        typeof item.message === "object"
+                          ? item.message?.user
+                          : undefined
+                      }
                     >
-                      {item.message}
+                      {typeof item.message === "string"
+                        ? item.message
+                        : item.message?.result}
                     </UserChat>
                   </Grid>
                 )}
